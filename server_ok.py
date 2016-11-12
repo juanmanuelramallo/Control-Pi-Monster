@@ -139,6 +139,7 @@ def luces_altas():
 	frontalDer.value = 1.0
 
 def toogle_luz_giro_derecha():
+	global estadoLucesGiro
 	if estadoLucesGiro == LucesGiro.STANDBY or estadoLucesGiro == LucesGiro.IZQ:
 		parpadear_giro_derecha()
 		estadoLucesGiro = LucesGiro.DER
@@ -150,6 +151,7 @@ def toogle_luz_giro_derecha():
 		print("Primero desactivar balizas")
 
 def toogle_luz_giro_izquierda():
+	global estadoLucesGiro
 	if estadoLucesGiro == LucesGiro.STANDBY or estadoLucesGiro == LucesGiro.DER:
 		parpadear_giro_izquierda()
 		estadoLucesGiro = LucesGiro.IZQ
@@ -160,6 +162,7 @@ def toogle_luz_giro_izquierda():
 		print("Primero desactivar balizas")
 
 def toogle_balizas():
+	global estadoLucesGiro
 	if estadoLucesGiro == LucesGiro.BALIZAS:
 		apagar_giro_izquierda()
 		apagar_giro_derecha()
@@ -172,6 +175,7 @@ def toogle_balizas():
 		estadoLucesGiro = LucesGiro.BALIZAS
 
 def toogle_luces():
+	global estadoLuces
 	if estadoLuces == Luces.STANDBY:
 		luces_bajas()
 		estadoLuces = Luces.BAJAS
