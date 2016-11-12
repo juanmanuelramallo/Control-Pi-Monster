@@ -2,7 +2,7 @@ import socket
 from time import sleep
 
 
-TCP_IP = '192.168.2.2'
+TCP_IP = '192.168.1.103'
 TCP_PORT = 5005
 BUFFER_SIZE = 40  # Normally 1024, but we want fast response
 
