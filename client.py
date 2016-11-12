@@ -11,9 +11,9 @@ s.send(MESSAGE)
 data = s.recv(BUFFER_SIZE)
 print("received data:", data)
 
-MESSAGE = "Goodbye world!"
+MESSAGE = "FRENAR"
 s.send(MESSAGE)
 data = s.recv(BUFFER_SIZE)
 print("received data:", data)
 
-s.close()
+# s.close()
