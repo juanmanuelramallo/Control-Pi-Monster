@@ -79,7 +79,7 @@ while(1):
     data = s.recv(BUFFER_SIZE)
     speed = int(data)
 
-    # Pide estados del auto
+    # Pide estados del auto para los leds del control
 
     sleep(0.1)
 

@@ -22,7 +22,7 @@ while 1:
     if data == b'FRENAR':
         print("Hay que frenar!")
 
-    data = str(BUFFER_SIZE)
+    # data = bytes(str(BUFFER_SIZE))
     conn.send(data)  # echo
     sleep(0.1)
 conn.close()
