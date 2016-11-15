@@ -3,7 +3,7 @@ from gpiozero import AngularServo, Motor, LED, DistanceSensor, PWMLED
 # import sys
 from time import sleep
 import socket
-import Enum
+from enum import Enum
 
 
 # VARIABLES GLOBALES
@@ -15,7 +15,7 @@ angulo = -13		# Angulo para el servo
 # INICIALIZACIONES
 
 # Motor
-motor = Motor(20,21, pwm=True)
+motor = Motor(20,21)
 motor.stop()
 
 # Servo
@@ -35,8 +35,8 @@ traseraIzq = LED(16)
 traseraGiroIzq = LED(13)
 traseraGiroDer = LED(19)
 
-# Conexión TCP_IP
-TCP_IP = '192.168.2.2'
+# Conexion TCP_IP
+TCP_IP = '192.168.43.163'
 TCP_PORT = 5005
 BUFFER_SIZE = 40  # Normally 1024, but we want fast response
 
@@ -47,7 +47,7 @@ s.listen(1)
 conn, addr = s.accept()
 print('Connection address:', addr)
 data = conn.recv(BUFFER_SIZE)
-print("Recibió del control:", data)
+print("Recibio del control:", data)
 conn.send("CONECTADO")
 
 # Estados del motor
@@ -76,18 +76,20 @@ def acelerar():
 
 def frenar():
 	global velocidad
+	global estadoMotor
 
 	if velocidad > 0.25:
-		velocidad -= 0.10
+		velocidad -= 0.2
 	elif velocidad <= 0.25:
 		velocidad = 0
 		estadoMotor = Motor.STANDBY
 
 def desacelerar():
 	global velocidad
+	global estadoMotor
 
 	if velocidad > 0.25:
-		velocidad -= 0.03
+		velocidad -= 0.1
 	elif velocidad <= 0.25:
 		velocidad = 0
 		estadoMotor = Motor.STANDBY
@@ -99,7 +101,7 @@ def derecha():
 		angulo = 0
 		print("No da mas a derecha")
 	elif angulo < 0:
-		angulo += 1
+		angulo += 6
 
 def izquierda():
 	global angulo
@@ -108,7 +110,15 @@ def izquierda():
 		angulo = -26
 		print("No da mas a izquierda")
 	elif angulo > -26:
-		angulo -= 1
+		angulo -= 6
+
+def vuelve_a_centro():
+	global angulo
+
+	if angulo > -13:
+		angulo -= 3
+	elif angulo < -13:
+		angulo += 3
 
 def parpadear_giro_derecha():
 	frontalGiroDer.blink(0.5,0.5)
@@ -131,17 +141,26 @@ def apagar_luces():
 	frontalIzq.off()
 
 def luces_bajas():
-	frontalDer.value = 0.5
-	frontalIzq.value = 0.5
-
+	frontalDer.value = 0.15
+	frontalIzq.value = 0.15
+	
 def luces_altas():
 	frontalIzq.value = 1.0
 	frontalDer.value = 1.0
+	
+def luces_traseras():
+	traseraDer.value = 1.0
+	traseraIzq.value = 1.0
+	
+def apagar_luces_traseras():
+	traseraDer.off()
+	traseraIzq.off()
 
 def toogle_luz_giro_derecha():
 	global estadoLucesGiro
 	if estadoLucesGiro == LucesGiro.STANDBY or estadoLucesGiro == LucesGiro.IZQ:
 		parpadear_giro_derecha()
+		apagar_giro_izquierda()
 		estadoLucesGiro = LucesGiro.DER
 	elif estadoLucesGiro == LucesGiro.DER:
 		frontalGiroDer.off()
@@ -154,6 +173,7 @@ def toogle_luz_giro_izquierda():
 	global estadoLucesGiro
 	if estadoLucesGiro == LucesGiro.STANDBY or estadoLucesGiro == LucesGiro.DER:
 		parpadear_giro_izquierda()
+		apagar_giro_derecha()
 		estadoLucesGiro = LucesGiro.IZQ
 	elif estadoLucesGiro == LucesGiro.IZQ:
 		apagar_giro_izquierda()
@@ -190,13 +210,20 @@ def toogle_luces():
 # c = 0
 
 while True:
-	# Duerme por 50 milisegundos
-	sleep(0.05)
+	# Duerme por 150 milisegundos
+	sleep(0.15)
 	# c += 1
-
-	motor.forward(velocidad)
+	
+	print("Velocidad es: ", velocidad)
+	print("Distancia a objeto es: ", sensor.distance )
 
 	data = conn.recv(BUFFER_SIZE)
+	
+	if data != b'B_Retro':
+		apagar_luces_traseras()
+		
+	
+			
 
 	# Gracias a python que no tiene switch-case les presento un gran if-elif statement
 	# PRESIONA BOTON DE AVANZAR
@@ -223,7 +250,7 @@ while True:
 	elif data == b'B_Retro':
 		# Si el motor estaba quieto
 		if estadoMotor == Motor.STANDBY:
-			# Debe acelerar e ir hacia atrás
+			# Debe acelerar e ir hacia atras
 			acelerar()
 			motor.backward(velocidad)
 			estadoMotor = Motor.ATRAS
@@ -236,6 +263,7 @@ while True:
 		elif estadoMotor == Motor.ADELANTE:
 			# Debe primero frenar
 			frenar()
+			luces_traseras()
 			motor.forward(velocidad)
 
 	# PRESIONA GIRAR A DERECHA
@@ -271,16 +299,35 @@ while True:
 	########### termina el gran if-elif-elif-elif ... ###########
 
 	# Echo to the client - al Monster Pi Pad
-	# Si pidió la velocidad se le envia la velocidad
+	# Si pidio la velocidad se le envia la velocidad
 	conn.send(data)
 
 	# Cada 100 milisegundos
 	# Si no se presiono ninguna tecla para avanzar o retroceder el autito
-	# deberá ir disminuyendo su velocidad lentamente hasta llegar a cero
+	# debera ir disminuyendo su velocidad lentamente hasta llegar a cero
 	if data != b'B_Avanz' and data != b'B_Retro':
-		if estadoMotor != Motor.STANDBY:
-			desacelerar()
-			if estadoMotor == Motor.ADELANTE:
-				motor.forward(velocidad)
-			elif estadoMotor == Motor.ATRAS:
+		desacelerar()
+		if estadoMotor == Motor.ADELANTE:
+			motor.forward(velocidad)
+		elif estadoMotor == Motor.ATRAS:
+			motor.backward(velocidad)
+		elif estadoMotor == Motor.STANDBY:
+			motor.stop()
+		
+	# Cada ciclo va corrigiendo el angulo de la direccion para volver a 0
+	if data != b'B_GiroDer' and data != b'B_GiroIzq' and data != b'B_Avanz' and data != b'B_Retro':
+		vuelve_a_centro()
+		servo.angle = angulo
+
+	if estadoMotor == Motor.ADELANTE:
+		if( sensor.distance < 0.6 ):
+			if( velocidad >= 0.7 ):
 				motor.backward(velocidad)
+				estadoMotor = Motor.ATRAS
+				print("Objeto a distancia menor a 60cm - Velocidad ALTA - freno forzoso")
+			else:
+				motor.stop()
+				luces_traseras()
+				print("Objeto a distancia menor a 60cm - Velocidad baja: frena ")
+		
+			

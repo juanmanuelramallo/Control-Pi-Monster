@@ -23,15 +23,15 @@ LEDgiroIzq = LED(19)
 LEDgiroDer = LED(26)
 
 # Configuración de conexión TCP/IP
-TCP_IP = '192.168.2.2'
+TCP_IP = '192.168.43.163'
 TCP_PORT = 5005
 BUFFER_SIZE = 40
-MESSAGE = "CONECTAR"
+MESSAGE = b"CONECTAR"
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect((TCP_IP, TCP_PORT))
 s.send(MESSAGE)
 data = s.recv(BUFFER_SIZE)
-print("Recibió del autito:", data)
+print("Recibio del autito:", data)
 
 # Recibe la velocidad
 speed = "0"
@@ -42,8 +42,8 @@ b = 0
 
 
 while(1):
-    # Duerme por 50 milisegundos
-    sleep(0.05)
+    # Duerme por 150 milisegundos
+    sleep(0.15)
     # c += 1
 
     if B_Retro.is_pressed:
@@ -97,7 +97,7 @@ while(1):
     #     s.send("SPEED")
     #     data = s.recv(BUFFER_SIZE)
     #     speed = str(data)
-    #     print("La velocidad del auto es: ", speed)
+    #     print("La velocidad deluto es: ", speed)
 
     # Si no se presiono ningun boton
     if b == 0:
